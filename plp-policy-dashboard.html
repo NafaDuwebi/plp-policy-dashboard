@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PLP Policy Management Dashboard | QMS</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --plp-blue: #0066cc;
+            --plp-dark-blue: #004080;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --info: #17a2b8;
+            --light-bg: #f8f9fa;
+            --dark-text: #212529;
+            --border: #dee2e6;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            color: var(--dark-text);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: var(--plp-dark-blue);
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .header-meta p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--plp-blue);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--plp-dark-blue);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,102,204,0.3);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 4px solid;
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+
+        .stat-card.urgent { border-left-color: var(--danger); }
+        .stat-card.warning { border-left-color: var(--warning); }
+        .stat-card.success { border-left-color: var(--success); }
+        .stat-card.info { border-left-color: var(--info); }
+
+        .stat-number {
+            font-size: 42px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .stat-sublabel {
+            color: #999;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .section {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .section-title {
+            font-size: 20px;
+            color: var(--plp-dark-blue);
+            font-weight: 600;
+        }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: var(--light-bg);
+            border-radius: 8px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .filter-group label {
+            font-size: 12px;
+            color: #666;
+            font-weight: 600;
+        }
+
+        select, input[type="text"] {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 14px;
+            min-width: 150px;
+            background: white;
+        }
+
+        select:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: var(--plp-blue);
+        }
+
+        .policy-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .policy-table thead {
+            background: var(--light-bg);
+        }
+
+        .policy-table th {
+            padding: 12px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--dark-text);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .policy-table td {
+            padding: 15px 12px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+        }
+
+        .policy-table tbody tr:hover {
+            background: var(--light-bg);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-urgent {
+            background: #fff5f5;
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+
+        .status-warning {
+            background: #fff9e6;
+            color: #856404;
+            border: 1px solid var(--warning);
+        }
+
+        .status-success {
+            background: #f0fff4;
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .status-current {
+            background: #e7f5ff;
+            color: var(--info);
+            border: 1px solid var(--info);
+        }
+
+        .category-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            background: #e9ecef;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #495057;
+            font-weight: 500;
+        }
+
+        .action-btn {
+            padding: 5px 12px;
+            font-size: 12px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            background: var(--plp-blue);
+            color: white;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            background: var(--plp-dark-blue);
+        }
+
+        footer {
+            text-align: center;
+            color: white;
+            margin-top: 40px;
+            padding: 20px;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .btn, .filters {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 22px;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            .policy-table {
+                font-size: 12px;
+            }
+            .policy-table th,
+            .policy-table td {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🗂️ PLP Policy Management Dashboard</h1>
+            <div class="header-meta">
+                <div>
+                    <p><strong>QMS & Sustainability Manager:</strong> Dr Nafa Duwebi</p>
+                    <p><strong>Last Updated:</strong> <span id="lastUpdate"></span></p>
+                </div>
+                <button class="btn btn-primary" onclick="exportToCSV()">
+                    📊 Export Report
+                </button>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+            <div class="stat-card urgent">
+                <div class="stat-label">🔴 Urgent Updates</div>
+                <div class="stat-number">4</div>
+                <div class="stat-sublabel">2023 Policies - Immediate Action Required</div>
+            </div>
+            <div class="stat-card warning">
+                <div class="stat-label">⚠️ Needs Update</div>
+                <div class="stat-number">13</div>
+                <div class="stat-sublabel">2024 Policies - Review Needed</div>
+            </div>
+            <div class="stat-card success">
+                <div class="stat-label">✅ Up to Date</div>
+                <div class="stat-number">8</div>
+                <div class="stat-sublabel">2025 & 2026 Policies - Current</div>
+            </div>
+            <div class="stat-card info">
+                <div class="stat-label">📋 Total Policies</div>
+                <div class="stat-number">28</div>
+                <div class="stat-sublabel">Across 6 Categories</div>
+            </div>
+        </div>
+
+        <!-- Main Table Section -->
+        <div class="section">
+            <div class="section-header">
+                <h2 class="section-title">Policy Status Overview</h2>
+            </div>
+
+            <!-- Filters -->
+            <div class="filters">
+                <div class="filter-group">
+                    <label>Category</label>
+                    <select id="filterCategory" onchange="applyFilters()">
+                        <option value="">All Categories</option>
+                        <option value="Employment">Employment</option>
+                        <option value="Pay and Pension">Pay and Pension</option>
+                        <option value="HR">HR</option>
+                        <option value="Training">Training</option>
+                        <option value="IT">IT</option>
+                        <option value="Environment">Environment</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Status</label>
+                    <select id="filterStatus" onchange="applyFilters()">
+                        <option value="">All Statuses</option>
+                        <option value="urgent">🔴 Urgent (2023)</option>
+                        <option value="warning">⚠️ Needs Update (2024)</option>
+                        <option value="success">✅ Up to Date (2025)</option>
+                        <option value="current">✅ Current (2026)</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Search</label>
+                    <input type="text" id="searchInput" placeholder="Search policies..." oninput="applyFilters()">
+                </div>
+            </div>
+
+            <!-- Policy Table -->
+            <div id="tableContainer"></div>
+        </div>
+
+        <!-- Footer -->
+        <footer>
+            <p><strong>PL Projects Ltd</strong> | Quality Management System</p>
+            <p>QMS & Sustainability Manager: Dr Nafa Duwebi | © 2026 PL Projects Ltd</p>
+        </footer>
+    </div>
+
+    <script>
+        // Policy Data
+        const policies = [
+            // Employment Category
+            { name: "Holiday Policy and Procedure", category: "Employment", version: "v05", year: "2024", modified: "2026-03-25", status: "warning", url: "https://plprojects.sharepoint.com/sites/PLPSharePoint365Online/PLP%20-%20BAU/PLP%20Operational/Employment/Holiday%20Policy%20and%20Procedure%202024_v05.pdf" },
+            { name: "Anti Bribery and Corruption Policy", category: "Employment", version: "v05", year: "2024", modified: "2024-12-10", status: "warning", url: "https://plprojects.sharepoint.com/sites/PLPSharePoint365Online/PLP%20-%20BAU/PLP%20Operational/Employment/Anti%20Bribery%20and%20Corruption%20Policy%202024_v05.pdf" },
+            { name: "Anti Slavery Policy", category: "Employment", version: "v05", year: "2024", modified: "2024-12-10", status: "warning", url: "https://plprojects.sharepoint.com/sites/PLPSharePoint365Online/PLP%20-%20BAU/PLP%20Operational/Employment/Anti%20Slavery%20Policy%202024%20v05.pdf" },
+            { name: "Drug and Alcohol Policy", category: "Employment", version: "v04", year: "2024", modified: "2024-12-09", status: "warning", url: "https://plprojects.sharepoint.com/sites/PLPSharePoint365Online/PLP%20-%20BAU/PLP%20Operational/Employment/Drug%20and%20Alcohol%20Policy%202024%20v04.pdf" },
+            { name: "Equality Diversity and Inclusion Policy", category: "Employment", version: "v05", year: "2024", modified: "2024-12-13", status: "warning", url: "https://plprojects.sharepoint.com/sites/PLPSharePoint365Online/PLP%20-%20BAU/PLP%20Operational/Employment/Equality%20Diversity%20and%20Inclusion%20Policy%202024_v05.pdf" },
+            { name: "Maternity and Paternity Policy", category: "Employment", version: "v02", year: "2024", modified: "2024-12-09", status: "warning", url: "" },
+            { name: "Maternity Policy", category: "Employment", version: "", year: "2023", modified: "2023-07-19", status: "urgent", url: "https://plprojects.sharepoint.com/sites/PLPSharePoint365Online/PLP%20-%20BAU/PLP%20Operational/Employment/Maternity%20Policy%202023.pdf" },
+            { name: "Compliment and Complaints Policy", category: "Employment", version: "v05", year: "2025", modified: "2025-04-25", status: "success", url: "https://plprojects.sharepoint.com/sites/PLPSharePoint365Online/PLP%20-%20BAU/PLP%20Operational/Employment/Compliment%20and%20Complaints%20Policy%202025%20v05.pdf" },
+            { name: "Whistleblowing Policy", category: "Employment", version: "v06", year: "2025", modified: "2025-04-25", status: "success", url: "https://plprojects.sharepoint.com/sites/PLPSharePoint365Online/PLP%20-%20BAU/PLP%20Operational/Employment/Whistleblowing%20Policy_2025_v06.pdf" },
+            { name: "Termination of Employment Policy", category: "Employment", version: "v06", year: "", modified: "2025-11-07", status: "warning", url: "https://plprojects.sharepoint.com/sites/PLPSharePoint365Online/PLP%20-%20BAU/PLP%20Operational/Employment/Termination_of_Employment_Policy_v06.pdf" },
+            { name: "Business Continuity Policy and Plan", category: "Employment", version: "v04.2", year: "2025", modified: "2025-10-03", status: "success", url: "" },
+            { name: "Health and Safety Policy", category: "Employment", version: "v07", year: "2025", modified: "2025-05-02", status: "success", url: "https://plprojects.sharepoint.com/sites/PLPSharePoint365Online/PLP%20-%20BAU/PLP%20Operational/HR/Health_and_Safety_Policy%202025_v07.pdf" },
+            
+            // Pay and Pension Category
+            { name: "Expenses Policy", category: "Pay and Pension", version: "v05", year: "Oct 2025", modified: "2025-12-03", status: "success", url: "https://plprojects.sharepoint.com/sites/PLPSharePoint365Online/PLP%20-%20BAU/PLP%20Operational/Pay%20and%20Pension/Expenses%20Policy_Oct_2025_v05.pdf" },
+            { name: "Pensions Policy", category: "Pay and Pension", version: "v04", year: "2023", modified: "2023-07-21", status: "urgent", url: "https://plprojects.sharepoint.com/sites/PLPSharePoint365Online/PLP%20-%20BAU/PLP%20Operational/Pay%20and%20Pension/Pensions%20Policy%202023_v04.pdf" },
+            { name: "Absenteeism Policy", category: "Pay and Pension", version: "v5", year: "2023", modified: "2023-08-10", status: "urgent", url: "https://plprojects.sharepoint.com/sites/PLPSharePoint365Online/PLP%20-%20BAU/PLP%20Operational/Pay%20and%20Pension/Absenteeism%20Policy%202023_v5.pdf" },
+            
+            // HR Category
+            { name: "Wellbeing Policy", category: "HR", version: "v.01.4", year: "2024", modified: "2025-02-03", status: "warning", url: "https://plprojects.sharepoint.com/sites/PLPSharePoint365Online/PLP%20-%20BAU/PLP%20Operational/HR/Wellbeing%20Policy%202024%20v.01.4.pdf" },
+            { name: "Sabbatical Policy", category: "HR", version: "", year: "2024", modified: "2024-12-05", status: "warning", url: "https://plprojects.sharepoint.com/sites/PLPSharePoint365Online/PLP%20-%20BAU/PLP%20Operational/HR/PLP_Sabbatical%20Policy_2024.pdf" },
+            { name: "Appeals Policy", category: "HR", version: "v04", year: "2023", modified: "2023-07-19", status: "urgent", url: "https://plprojects.sharepoint.com/sites/PLPSharePoint365Online/PLP%20-%20BAU/PLP%20Operational/HR/Appeals%20Policy%202023_v04.pdf" },
+            { name: "Grievance Policy", category: "HR", version: "v05", year: "2024", modified: "2025-11-07", status: "warning", url: "https://plprojects.sharepoint.com/sites/PLPSharePoint365Online/PLP%20-%20BAU/PLP%20Operational/HR/Grievance_Policy_2024_v05.pdf" },
+            { name: "Bullying and Harassment Policy", category: "HR", version: "v05", year: "", modified: "2025-07-15", status: "warning", url: "https://plprojects.sharepoint.com/sites/PLPSharePoint365Online/PLP%20-%20BAU/PLP%20Operational/HR/Bullying%20and%20Harassment%20Policy_v05_approved.pdf" },
+            { name: "Professional Development of Employees Policy", category: "HR", version: "v05", year: "2024", modified: "2025-01-27", status: "warning", url: "" },
+            { name: "Quality and Quality Assurance Policy", category: "HR", version: "v02", year: "2026", modified: "2026-05-06", status: "current", url: "https://plprojects.sharepoint.com/sites/PLPSharePoint365Online/PLP%20-%20BAU/PLP%20Operational/HR/Quality%20and%20Quality%20Assurance%20Policy%202026%20v02.pdf" },
+            { name: "PLP Employee Handbook", category: "HR", version: "v2", year: "", modified: "2025-11-12", status: "success", url: "https://plprojects.sharepoint.com/sites/PLPSharePoint365Online/PLP%20-%20BAU/PLP%20Operational/HR/PLP_Employee_Handbook_v2_Final.pdf" },
+            
+            // Training Category
+            { name: "Safeguarding Policy", category: "Training", version: "v07", year: "2026", modified: "2026-02-27", status: "current", url: "https://plprojects.sharepoint.com/sites/PLPSharePoint365Online/PLP%20-%20BAU/PLP%20Operational/Training/Safeguarding_Policy_2026_v07.pdf" },
+            { name: "Training Policy Statement", category: "Training", version: "v0.4", year: "2024", modified: "2026-02-27", status: "warning", url: "https://plprojects.sharepoint.com/sites/PLPSharePoint365Online/PLP%20-%20BAU/PLP%20Operational/Training/Training_Policy_Statement_2024_v0.4.pdf" },
+            
+            // IT Category
+            { name: "Data Protection Policy", category: "IT", version: "v03.3", year: "2025", modified: "2026-02-27", status: "success", url: "https://plprojects.sharepoint.com/sites/PLPSharePoint365Online/PLP%20-%20BAU/PLP%20Operational/IT/Data_Protection_Policy_2025_v03.3.pdf" },
+            
+            // Environment Category
+            { name: "Sustainability (including Environmental) Policy", category: "Environment", version: "v06", year: "2024", modified: "2025-02-08", status: "warning", url: "https://plprojects.sharepoint.com/sites/PLPSharePoint365Online/PLP%20-%20BAU/PLP%20Operational/Environment/Sustainability%20(including%20Environmental)%20Policy%202024%20v06.pdf" },
+            { name: "Corporate Social Responsibility Statement", category: "Environment", version: "v05", year: "2024", modified: "2025-02-08", status: "warning", url: "https://plprojects.sharepoint.com/sites/PLPSharePoint365Online/PLP%20-%20BAU/PLP%20Operational/Environment/Corporate%20Social%20Responsibility%20Statement%202024%20v05.pdf" }
+        ];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateLastModified();
+            renderTable(policies);
+        });
+
+        function updateLastModified() {
+            const now = new Date();
+            document.getElementById('lastUpdate').textContent = now.toLocaleDateString('en-GB', { 
+                day: '2-digit', 
+                month: 'short', 
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function renderTable(data) {
+            let html = `
+                <table class="policy-table">
+                    <thead>
+                        <tr>
+                            <th>Policy Name</th>
+                            <th>Category</th>
+                            <th>Version</th>
+                            <th>Year</th>
+                            <th>Status</th>
+                            <th>Last Modified</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            data.forEach(policy => {
+                const statusClass = 'status-' + policy.status;
+                const statusText = getStatusText(policy.status);
+                
+                html += `
+                    <tr>
+                        <td><strong>${policy.name}</strong></td>
+                        <td><span class="category-badge">${policy.category}</span></td>
+                        <td>${policy.version || 'N/A'}</td>
+                        <td>${policy.year || 'N/A'}</td>
+                        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                        <td>${formatDate(policy.modified)}</td>
+                        <td>
+                            ${policy.url ? `<button class="action-btn" onclick="openPolicy('${policy.url}')">View</button>` : '<span style="color:#999;">No Link</span>'}
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                    </tbody>
+                </table>
+            `;
+
+            document.getElementById('tableContainer').innerHTML = html;
+        }
+
+        function getStatusText(status) {
+            const texts = {
+                'urgent': '🔴 Urgent',
+                'warning': '⚠️ Needs Update',
+                'success': '✅ Up to Date',
+                'current': '✅ Current'
+            };
+            return texts[status] || 'Unknown';
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+        }
+
+        function applyFilters() {
+            const categoryFilter = document.getElementById('filterCategory').value;
+            const statusFilter = document.getElementById('filterStatus').value;
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            let filtered = policies.filter(policy => {
+                const matchesCategory = !categoryFilter || policy.category === categoryFilter;
+                const matchesStatus = !statusFilter || policy.status === statusFilter;
+                const matchesSearch = !searchTerm || 
+                    policy.name.toLowerCase().includes(searchTerm) ||
+                    policy.category.toLowerCase().includes(searchTerm) ||
+                    (policy.version && policy.version.toLowerCase().includes(searchTerm));
+                
+                return matchesCategory && matchesStatus && matchesSearch;
+            });
+            
+            renderTable(filtered);
+        }
+
+        function openPolicy(url) {
+            if (url) {
+                window.open(url, '_blank');
+            }
+        }
+
+        function exportToCSV() {
+            let csv = 'Policy Name,Category,Version,Year,Status,Last Modified,SharePoint URL\n';
+            
+            policies.forEach(policy => {
+                csv += `"${policy.name}","${policy.category}","${policy.version || 'N/A'}","${policy.year || 'N/A'}","${getStatusText(policy.status)}","${formatDate(policy.modified)}","${policy.url || 'N/A'}"\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `PLP_Policy_Report_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
